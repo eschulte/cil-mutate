@@ -6,7 +6,7 @@ let usage = Printf.sprintf
     (Filename.basename Sys.argv.(0))
 
 let    ids = ref false
-let number = ref false
+let   list = ref false
 let delete = ref false
 let insert = ref false
 let   swap = ref false
@@ -16,7 +16,7 @@ let   args = ref []
 
 let speclist = [
   (   "-ids", Arg.Unit (fun () ->    ids := true), "print the # of statements");
-  ("-number", Arg.Unit (fun () -> number := true), "number all statements");
+  (  "-list", Arg.Unit (fun () ->   list := true), "list all statements");
   ("-delete", Arg.Unit (fun () -> delete := true), "delete stmt1");
   ("-insert", Arg.Unit (fun () -> insert := true), "insert stmt1 before stmt2");
   (  "-swap", Arg.Unit (fun () ->   swap := true), "swap two stmt1 with stmt2");
@@ -110,8 +110,18 @@ let () = begin
   if !ids then begin
     Printf.printf "%d\n" !counter;
 
-  end else if !number then begin
-    Printf.printf "number\n"
+  end else if !list then begin
+    for i=1 to (!counter - 1) do
+      let stmt = Hashtbl.find massive_hash_table i in
+      let stmt_type = match stmt with
+      | Instr _ -> "Instr"
+      | Return _ -> "Return"
+      | If _ -> "If"
+      | Loop _ -> "Loop"
+      | _ -> "Error: Other"
+      in
+      Printf.printf "%d %s\n" i stmt_type;
+    done
 
   end else if !delete then begin
     Printf.printf "/* deleting %d */\n" !stmt1;
@@ -126,7 +136,7 @@ let () = begin
   end;
 
   (* 4. write the results to STDOUT *)
-  if not (!ids or !number) then begin
+  if not (!ids or !list) then begin
     let printer = new defaultCilPrinterClass in
     iterGlobals cil (dumpGlobal printer stdout)
   end;
