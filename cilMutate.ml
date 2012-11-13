@@ -1,5 +1,7 @@
 open Cil
 
+(* Copyright (C) 2012 Eric Schulte and Westly Weimer *)
+
 (* Options and usage message *)
 let usage = Printf.sprintf
     "Usage: %s [options] file"
