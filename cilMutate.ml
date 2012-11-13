@@ -49,8 +49,12 @@ let can_trace sk = match sk with
   -> false
 
 let counter = ref 0
-
 let main_ht = Hashtbl.create 4096
+
+(* This makes a deep copy of an arbitrary Ocaml data structure *) 
+let copy (x : 'a) = 
+  let str = Marshal.to_string x [] in
+  (Marshal.from_string str 0 : 'a) 
 
 (* This visitor walks over the C program AST and builds the hashtable that
  * maps integers to statements. *) 
@@ -80,6 +84,22 @@ class delVisitor (file : Cil.file) (to_del : stmt_map) = object
     end else s)
 end
 
+class appVisitor (file : Cil.file) (to_app : stmt_map) = object
+  (* If (x,y) is in the to_append mapping, we replace x with
+   * the block { x; y; } -- that is, we append y after x. *) 
+  inherit nopCilVisitor
+  method vstmt s = ChangeDoChildrenPost(s, fun s ->
+      if Hashtbl.mem to_app s.sid then begin
+        let swap_with = Hashtbl.find to_app s.sid in 
+        let copy = copy swap_with in
+        let block = {
+          battrs = [] ;
+          bstmts = [ s ; { s with skind = copy ; } ];
+        } in
+        { s with skind = Block(block) } 
+      end else s) 
+end 
+
 
 (* main routine: handle cmdline options and args *)
 let () = begin
@@ -103,9 +123,12 @@ let () = begin
   visitCilFileSameGlobals (new numVisitor) cil;
   let target_stmts = Hashtbl.create 255 in
   if !stmt1 <> 0 then begin
-    Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt1);
+    if !stmt2 <> 0 then
+      Hashtbl.add target_stmts !stmt2 (Hashtbl.find main_ht !stmt2)
+    else
+      Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt1)
   end;
-  
+
   (* 3. modify at the CIL level *)
   if !ids then begin
     Printf.printf "%d\n" !counter;
@@ -128,7 +151,8 @@ let () = begin
     visitCilFileSameGlobals del cil;
 
   end else if !insert then begin
-    Printf.printf "insert\n"
+    let del = new appVisitor cil target_stmts in
+    visitCilFileSameGlobals del cil;
 
   end else if !swap then begin
     Printf.printf "swap\n"
