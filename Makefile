@@ -1,6 +1,6 @@
 SOURCES = cilMutate.ml
-OBJECTS = $(SOURCES:.ml=.cmo)
-EXES = $(OBJECTS:.cmo=)
+OBJECTS = $(SOURCES:.ml=.cmx)
+EXES = $(OBJECTS:.cmx=)
 
 OS=$(shell uname)
 ifeq ($(OS),Linux)
@@ -30,17 +30,17 @@ OCAMLOPT = ocamlopt -w Aelzv $(OCAML_OPTIONS)
 all: cil-mutate
 .PHONY: clean install
 
-%.cmo: %.ml
-	$(OCAMLC) -c -g $*.ml
+%.cmx: %.ml
+	$(OCAMLOPT) -c $*.ml
 
-%: %.cmo
-	$(OCAMLOPT) -o $@ cil.cmxa
+%: %.cmx
+	$(OCAMLOPT) -o $@ cil.cmxa $^
 
 cil-mutate: cilMutate
 	mv $< $@
 
 clean:
-	rm -f $(EXES) $(OBJECTS) cil-mutate
+	rm -f $(EXES) $(OBJECTS) *.cmi *.cmo *.o cil-mutate
 
 install: $(EXES)
 	mkdir -p $(DESTDIR)/bin
