@@ -48,11 +48,7 @@ let can_trace sk = match sk with
   | TryExcept _
   -> false
 
-let counter = ref 1 
-let get_next_count () = 
-  let count = !counter in 
-  incr counter ;
-  count 
+let counter = ref 0
 
 let main_ht = Hashtbl.create 4096
 
@@ -64,9 +60,9 @@ class numVisitor = object
     ChangeDoChildrenPost(b,(fun b ->
       List.iter (fun b -> 
         if can_trace b.skind then begin
-          let count = get_next_count () in 
-          b.sid <- count ;
-          Hashtbl.add main_ht count b.skind
+          incr counter;
+          b.sid <- !counter ;
+          Hashtbl.add main_ht !counter b.skind
         end else begin
           b.sid <- 0; 
         end ;
@@ -106,14 +102,16 @@ let () = begin
   let cil = (Frontc.parse file ()) in
   visitCilFileSameGlobals (new numVisitor) cil;
   let target_stmts = Hashtbl.create 255 in
-  Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt1);
+  if !stmt1 <> 0 then begin
+    Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt1);
+  end;
   
   (* 3. modify at the CIL level *)
   if !ids then begin
-    Printf.printf "%d\n" (!counter - 1);
+    Printf.printf "%d\n" !counter;
 
   end else if !list then begin
-    for i=1 to (!counter - 1) do
+    for i=1 to !counter do
       let stmt = Hashtbl.find main_ht i in
       let stmt_type = match stmt with
       | Instr _ -> "Instr"
