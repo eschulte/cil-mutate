@@ -8,6 +8,8 @@ let number = ref false
 let delete = ref false
 let insert = ref false
 let   swap = ref false
+let  stmt1 = ref 0
+let  stmt2 = ref 0
 let   args = ref []
 
 let speclist = [
@@ -16,6 +18,8 @@ let speclist = [
   ("-delete", Arg.Unit (fun () -> delete := true), "");
   ("-insert", Arg.Unit (fun () -> insert := true), "");
   (  "-swap", Arg.Unit (fun () ->   swap := true), "");
+  ( "-stmt1", Arg.Int  (fun arg -> stmt1 := arg),  "");
+  ( "-stmt2", Arg.Int  (fun arg -> stmt2 := arg),  "");
   (     "--", Arg.Rest (fun arg ->  args := !args @ [arg]), "stop parsing opts")
 ]
 
