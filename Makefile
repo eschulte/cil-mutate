@@ -1,6 +1,6 @@
 SOURCES = cilMutate.ml
-OBJECTS = $(SOURCES:.ml=.cmx)
-EXES = $(OBJECTS:.cmx=)
+MODULES = $(SOURCES:.ml=.cmx)
+EXES = $(MODULES:.cmx=)
 
 OS=$(shell uname)
 ifeq ($(OS),Linux)
@@ -44,7 +44,7 @@ cil-mutate: cilMutate
 	mv $< $@
 
 clean:
-	rm -f $(EXES) $(OBJECTS) *.cmi *.cmo *.o cil-mutate
+	rm -f $(EXES) $(MODULES) *.cmi *.cmo *.o cil-mutate
 
 install: cil-mutate
 	mkdir -p $(DESTDIR)/bin
