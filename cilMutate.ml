@@ -11,8 +11,8 @@ let   list = ref false
 let delete = ref false
 let insert = ref false
 let   swap = ref false
-let  stmt1 = ref 0
-let  stmt2 = ref 0
+let  stmt1 = ref (-1)
+let  stmt2 = ref (-1)
 let   args = ref []
 
 let speclist = [
@@ -48,7 +48,7 @@ let can_trace sk = match sk with
   | TryExcept _
   -> false
 
-let counter = ref 0
+let counter = ref (-1)
 let main_ht = Hashtbl.create 4096
 
 (* This makes a deep copy of an arbitrary Ocaml data structure *) 
@@ -146,8 +146,8 @@ let () = begin
   let cil = (Frontc.parse file ()) in
   visitCilFileSameGlobals (new numVisitor) cil;
   let target_stmts = Hashtbl.create 255 in
-  if !stmt1 <> 0 then begin
-    if !stmt2 <> 0 then
+  if !stmt1 >= 0 then begin
+    if !stmt2 >= 0 then
       Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt2)
     else
       Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt1)
@@ -155,10 +155,10 @@ let () = begin
 
   (* 3. modify at the CIL level *)
   if !ids then begin
-    Printf.printf "%d\n" !counter;
+    Printf.printf "%d\n" (1 + !counter);
 
   end else if !list then begin
-    for i=1 to !counter do
+    for i=0 to !counter do
       let stmt = Hashtbl.find main_ht i in
       let stmt_type = match stmt with
       | Instr _ -> "Instr"
@@ -171,7 +171,7 @@ let () = begin
     done
 
   end else if !delete then begin
-    if !stmt1 = 0 then begin
+    if !stmt1 < 0 then begin
       Printf.printf "Delete requires a statment.  Use -stmt1.\n";
       exit 1
     end;
@@ -179,7 +179,7 @@ let () = begin
     visitCilFileSameGlobals del cil;
 
   end else if !insert then begin
-    if !stmt1 = 0 or !stmt2 = 0 then begin
+    if !stmt1 < 0 or !stmt2 < 0 then begin
       Printf.printf "Insert requires statments.  Use -stmt1 and -stmt2.\n";
       exit 1
     end;
@@ -187,7 +187,7 @@ let () = begin
     visitCilFileSameGlobals app cil;
 
   end else if !swap then begin
-    if !stmt1 = 0 or !stmt2 = 0 then begin
+    if !stmt1 < 0 or !stmt2 < 0 then begin
       Printf.printf "Swap requires statments.  Use -stmt1 and -stmt2.\n";
       exit 1
     end;

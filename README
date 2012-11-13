@@ -42,10 +42,10 @@ Examples
     2
 
     $ cil-mutate -list etc/hello.c
-    1 Instr
-    2 Return
+    0 Instr
+    1 Return
 
-    $ cil-mutate -delete -stmt1 1 etc/hello.c
+    $ cil-mutate -delete -stmt1 0 etc/hello.c
     extern int ( /* missing proto */  puts)() ;
     int main(int argc , char **argv )
     {
@@ -59,7 +59,7 @@ Examples
     }
     }
 
-    $ cil-mutate -swap -stmt1 1 -stmt2 2 etc/hello.c
+    $ cil-mutate -swap -stmt1 0 -stmt2 1 etc/hello.c
     extern int ( /* missing proto */  puts)() ;
     int main(int argc , char **argv ) 
     { 
