@@ -45,10 +45,14 @@ let () = begin
     exit 1
   end;
   let file = (List.nth !args 0) in
+  if not (Sys.file_exists file) then begin
+    Printf.printf "File '%s' does not exist\n" file;
+    exit 1
+  end;
   (* 2. load the program into CIL *)
   Cil.initCIL ();
-  let cil = (Frontc.parse file) in
+  let cil = (Frontc.parse file ()) in
+  write_cil cil;
   (* 3. modify at the CIL level *)
   (* 4. write the results to STDOUT *)
-  Printf.printf "ids=%b number=%b file=%s\n" !ids !number file
 end
