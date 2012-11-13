@@ -26,17 +26,13 @@ let speclist = [
 
 (* visitors *)
 (* class delVisitor (to_del : int) = object *)
-(*   inherit nopCilVisitor *)
-(*   method vstmt s = ChangeDoChildrenPost(s, fun s -> *)
-(*     if to_del = s.sid then begin  *)
+(*   inherit Cil.nopCilVisitor *)
+(*   method vstmt s = Cil.ChangeDoChildrenPost(s, fun s -> *)
+(*     if to_del = s.sid then begin *)
 (*       let block = { battrs = []; bstmts = []; } in *)
 (*       { s with skind = Block(block); } *)
 (*     end else s) *)
-(* end  *)
-
-let write_cil (cil : Cil.file) =
-  let printer = new Cil.defaultCilPrinterClass in
-  Cil.iterGlobals cil (Cil.dumpGlobal printer stdout)
+(* end *)
 
 
 (* main routine: handle cmdline options and args *)
@@ -69,5 +65,6 @@ let () = begin
     Printf.printf "swap\n"
   end;
   (* 4. write the results to STDOUT *)
-  write_cil cil;
+  let printer = new Cil.defaultCilPrinterClass in
+  Cil.iterGlobals cil (Cil.dumpGlobal printer stdout)
 end
