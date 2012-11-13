@@ -1,4 +1,4 @@
-(* Copyright (C) 2012 Eric Schulte *)
+(* Copyright (C) 2012 Eric Schulte, Westly Weimer *)
 open Cil
 
 (** Options and usage message *)
@@ -27,7 +27,6 @@ let speclist = [
 
 
 (** CIL visitors and support *)
-(* this section is largely adapted from original code by Westly Weimer *)
 type stmt_id = int (* integers map to 'statements' in C AST. *) 
 type stmt_map = (stmt_id, Cil.stmtkind) Hashtbl.t (* map stmt_id to statement. *)
 
