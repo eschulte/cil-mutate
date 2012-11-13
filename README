@@ -11,7 +11,8 @@ source files.
 
 Installation
 
-  cil-mutate relies on CIL [1].
+  The cil-mutate tool requires that CIL [1] be installed on your
+  machine and able to be found by the ocamlfind utility.
 
   [1] http://kerneis.github.com/cil/
 
@@ -25,4 +26,47 @@ Examples
       return 0;
     }
 
+    $ cil-mutate etc/hello.c
+    extern int ( /* missing proto */  puts)() ;
+    int main(int argc , char **argv )
+    {
+
+
+      {
+      puts("hello");
+      return (0);
+    }
+    }
+
     $ cil-mutate -ids etc/hello.c
+    2
+
+    $ cil-mutate -list etc/hello.c
+    1 Instr
+    2 Return
+
+    $ cil-mutate -delete -stmt1 1 etc/hello.c
+    extern int ( /* missing proto */  puts)() ;
+    int main(int argc , char **argv )
+    {
+
+
+      {
+      {
+
+      }
+      return (0);
+    }
+    }
+
+    $ cil-mutate -swap -stmt1 1 -stmt2 2 etc/hello.c
+    extern int ( /* missing proto */  puts)() ;
+    int main(int argc , char **argv ) 
+    { 
+
+
+      {
+      return (0);
+      puts("hello");
+    }
+    }
