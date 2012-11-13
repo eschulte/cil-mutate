@@ -46,6 +46,6 @@ cil-mutate: cilMutate
 clean:
 	rm -f $(EXES) $(OBJECTS) *.cmi *.cmo *.o cil-mutate
 
-install: $(EXES)
+install: cil-mutate
 	mkdir -p $(DESTDIR)/bin
 	install -D $< $(DESTDIR)/bin
