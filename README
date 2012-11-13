@@ -70,3 +70,8 @@ Examples
       puts("hello");
     }
     }
+
+License
+
+  Licensed under the GPLV3, see the COPYING file in this directory for
+  more information.
