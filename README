@@ -4,7 +4,7 @@ This tool performs a number of operations on CIL ASTs parsed from C
 source files.
 
       ids | prints the total number of statements
-   number | numbers each statement
+     list | list each statement with its ID
    delete | deletes that numbered statement
    insert | copies the second numbered statement before the first
      swap | swaps the two numbered statements

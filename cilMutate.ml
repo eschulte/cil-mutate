@@ -15,14 +15,13 @@ let  stmt2 = ref 0
 let   args = ref []
 
 let speclist = [
-  (   "-ids", Arg.Unit (fun () ->    ids := true), "print the # of statements");
-  (  "-list", Arg.Unit (fun () ->   list := true), "list all statements");
+  (   "-ids", Arg.Unit (fun () -> ids := true), "   print the # of statements");
+  (  "-list", Arg.Unit (fun () -> list := true), "  list statements with IDs");
   ("-delete", Arg.Unit (fun () -> delete := true), "delete stmt1");
   ("-insert", Arg.Unit (fun () -> insert := true), "insert stmt1 before stmt2");
-  (  "-swap", Arg.Unit (fun () ->   swap := true), "swap two stmt1 with stmt2");
-  ( "-stmt1", Arg.Int  (fun arg -> stmt1 := arg),  "first statement");
-  ( "-stmt2", Arg.Int  (fun arg -> stmt2 := arg),  "second statement");
-  (     "--", Arg.Rest (fun arg ->  args := !args @ [arg]), "stop parsing opts")
+  (  "-swap", Arg.Unit (fun () -> swap := true), "  swap two stmt1 with stmt2");
+  ( "-stmt1", Arg.Int  (fun arg -> stmt1 := arg),  " first statement");
+  ( "-stmt2", Arg.Int  (fun arg -> stmt2 := arg),  " second statement")
 ]
 
 
