@@ -59,7 +59,7 @@ let copy (x : 'a) =
  * maps integers to statements. *) 
 class numVisitor = object
   inherit nopCilVisitor
-  method vblock b = 
+  method! vblock b = 
     ChangeDoChildrenPost(b,(fun b ->
       List.iter (fun b -> 
         if can_trace b.skind then begin
@@ -76,7 +76,7 @@ end
 
 class delVisitor (file : Cil.file) (to_del : stmt_map) = object
   inherit nopCilVisitor
-  method vstmt s = ChangeDoChildrenPost(s, fun s ->
+  method! vstmt s = ChangeDoChildrenPost(s, fun s ->
     if Hashtbl.mem to_del s.sid then begin
       let block = { battrs = []; bstmts = []; } in
       { s with skind = Block(block) }
@@ -87,7 +87,7 @@ class appVisitor (file : Cil.file) (to_app : stmt_map) = object
   (* If (x,y) is in the to_append mapping, we replace x with
    * the block { x; y; } -- that is, we append y after x. *) 
   inherit nopCilVisitor
-  method vstmt s = ChangeDoChildrenPost(s, fun s ->
+  method! vstmt s = ChangeDoChildrenPost(s, fun s ->
       if Hashtbl.mem to_app s.sid then begin
         let block = {
           battrs = [];
@@ -101,7 +101,7 @@ class swapVisitor (file : Cil.file) (to_swap : stmt_map) = object
   (* If (x,y) is in the to_swap mapping, we replace statement x 
    * with statement y. Presumably (y,x) is also in the mapping. *) 
   inherit nopCilVisitor
-  method vstmt s = ChangeDoChildrenPost(s, fun s ->
+  method! vstmt s = ChangeDoChildrenPost(s, fun s ->
       if Hashtbl.mem to_swap s.sid then begin
         { s with skind = (copy (Hashtbl.find to_swap s.sid)) } 
       end else s) 
@@ -109,7 +109,7 @@ end
 
 class noLineCilPrinterClass = object
   inherit defaultCilPrinterClass as super 
-  method pGlobal () (g:global) : Pretty.doc = 
+  method! pGlobal () (g:global) : Pretty.doc = 
     match g with 
     | GVarDecl(vi,l) when
         (not !printCilAsIs && Hashtbl.mem Cil.builtinFunctions vi.vname) -> 
@@ -119,7 +119,7 @@ class noLineCilPrinterClass = object
           Pretty.nil 
     | _ -> super#pGlobal () g
 
-  method pLineDirective ?(forcefile=false) l = 
+  method! pLineDirective ?(forcefile=false) l = 
     Pretty.nil
 end 
 
