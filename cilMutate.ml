@@ -1,8 +1,7 @@
+(* Copyright (C) 2012 Eric Schulte *)
 open Cil
 
-(* Copyright (C) 2012 Eric Schulte and Westly Weimer *)
-
-(* Options and usage message *)
+(** Options and usage message *)
 let usage = Printf.sprintf
     "Usage: %s [options] file"
     (Filename.basename Sys.argv.(0))
@@ -27,7 +26,8 @@ let speclist = [
 ]
 
 
-(* CIL visitors and support *)
+(** CIL visitors and support *)
+(* this section is largely adapted from original code by Westly Weimer *)
 type stmt_id = int (* integers map to 'statements' in C AST. *) 
 type stmt_map = (stmt_id, Cil.stmtkind) Hashtbl.t (* map stmt_id to statement. *)
 
@@ -125,9 +125,8 @@ class noLineCilPrinterClass = object
     Pretty.nil
 end 
 
-
 
-(* main routine: handle cmdline options and args *)
+(** main routine: handle cmdline options and args *)
 let () = begin
 
   (* 1. read and parse arguments *)
