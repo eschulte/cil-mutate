@@ -2,7 +2,7 @@ open Cil
 
 (* Options and usage message *)
 let usage = Printf.sprintf
-    "Usage: %s [-cut,-insert,-swap] [stmt-ids]"
+    "Usage: %s [options] file"
     (Filename.basename Sys.argv.(0))
 
 let    ids = ref false
@@ -15,13 +15,13 @@ let  stmt2 = ref 0
 let   args = ref []
 
 let speclist = [
-  (   "-ids", Arg.Unit (fun () ->    ids := true), "");
-  ("-number", Arg.Unit (fun () -> number := true), "");
-  ("-delete", Arg.Unit (fun () -> delete := true), "");
-  ("-insert", Arg.Unit (fun () -> insert := true), "");
-  (  "-swap", Arg.Unit (fun () ->   swap := true), "");
-  ( "-stmt1", Arg.Int  (fun arg -> stmt1 := arg),  "");
-  ( "-stmt2", Arg.Int  (fun arg -> stmt2 := arg),  "");
+  (   "-ids", Arg.Unit (fun () ->    ids := true), "print the # of statements");
+  ("-number", Arg.Unit (fun () -> number := true), "number all statements");
+  ("-delete", Arg.Unit (fun () -> delete := true), "delete stmt1");
+  ("-insert", Arg.Unit (fun () -> insert := true), "insert stmt1 before stmt2");
+  (  "-swap", Arg.Unit (fun () ->   swap := true), "swap two stmt1 with stmt2");
+  ( "-stmt1", Arg.Int  (fun arg -> stmt1 := arg),  "first statement");
+  ( "-stmt2", Arg.Int  (fun arg -> stmt2 := arg),  "second statement");
   (     "--", Arg.Rest (fun arg ->  args := !args @ [arg]), "stop parsing opts")
 ]
 
@@ -60,7 +60,8 @@ let () = begin
   end else if !number then begin
     Printf.printf "number\n"
   end else if !delete then begin
-    Printf.printf "delete\n"
+    let del = new delVisitor in
+    visitCilFileSameGlobals (del !stmt1) cil;
   end else if !insert then begin
     Printf.printf "insert\n"
   end else if !swap then begin
