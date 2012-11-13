@@ -1,3 +1,5 @@
+open Cil
+
 (* Options and usage message *)
 let usage = Printf.sprintf
     "Usage: %s [-cut,-insert,-swap] [stmt-ids]"
@@ -25,14 +27,14 @@ let speclist = [
 
 
 (* visitors *)
-(* class delVisitor (to_del : int) = object *)
-(*   inherit Cil.nopCilVisitor *)
-(*   method vstmt s = Cil.ChangeDoChildrenPost(s, fun s -> *)
-(*     if to_del = s.sid then begin *)
-(*       let block = { battrs = []; bstmts = []; } in *)
-(*       { s with skind = Block(block); } *)
-(*     end else s) *)
-(* end *)
+class delVisitor (to_del : int) = object
+  inherit nopCilVisitor
+  method vstmt s = ChangeDoChildrenPost(s, fun s ->
+    if to_del = s.sid then begin
+      let block = { battrs = []; bstmts = []; } in
+      { s with skind = Block(block); }
+    end else s)
+end
 
 
 (* main routine: handle cmdline options and args *)
@@ -50,7 +52,7 @@ let () = begin
     exit 1
   end;
   (* 2. load the program into CIL *)
-  Cil.initCIL ();
+  initCIL ();
   let cil = (Frontc.parse file ()) in
   (* 3. modify at the CIL level *)
   if !ids then begin
@@ -65,6 +67,6 @@ let () = begin
     Printf.printf "swap\n"
   end;
   (* 4. write the results to STDOUT *)
-  let printer = new Cil.defaultCilPrinterClass in
-  Cil.iterGlobals cil (Cil.dumpGlobal printer stdout)
+  let printer = new defaultCilPrinterClass in
+  iterGlobals cil (dumpGlobal printer stdout)
 end
