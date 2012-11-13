@@ -9,6 +9,8 @@ OCAMLLIBS = \
 	unix.cmxa \
 	nums.cmxa
 
+BINDIR=$(DESTDIR)/usr/bin/
+
 all: cil-mutate
 .PHONY: clean install
 
@@ -22,5 +24,5 @@ clean:
 	rm -f cil-mutate $(OBJECTS) *.cmi *.cmo *.o
 
 install: cil-mutate
-	mkdir -p $(DESTDIR)/bin
-	install -D $< $(DESTDIR)/bin
+	mkdir -p $(BINDIR)
+	install -D $< $(BINDIR)
