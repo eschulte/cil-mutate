@@ -26,15 +26,19 @@ else
 endif
 OCAMLC = ocamlc -g $(OCAML_OPTIONS)
 OCAMLOPT = ocamlopt -w Aelzv $(OCAML_OPTIONS)
+OCAMLLIBS = \
+	str.cmxa \
+	unix.cmxa \
+	nums.cmxa
 
 all: cil-mutate
 .PHONY: clean install
 
 %.cmx: %.ml
-	$(OCAMLOPT) -c $*.ml
+	$(OCAMLOPT) -o $@ -c $*.ml
 
 %: %.cmx
-	$(OCAMLOPT) -o $@ cil.cmxa $^
+	$(OCAMLOPT) -o $@ $(OCAMLLIBS) cil.cmxa $^
 
 cil-mutate: cilMutate
 	mv $< $@
