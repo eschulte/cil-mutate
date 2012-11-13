@@ -1,6 +1,5 @@
 SOURCES = cilMutate.ml
-MODULES = $(SOURCES:.ml=.cmx)
-EXES = $(MODULES:.cmx=)
+OBJECTS = $(SOURCES:.ml=.cmx)
 
 OCAML_OPTIONS = -I $(shell ocamlfind query cil)
 OCAMLC = ocamlc -g $(OCAML_OPTIONS)
@@ -16,14 +15,11 @@ all: cil-mutate
 %.cmx: %.ml
 	$(OCAMLOPT) -o $@ -c $*.ml
 
-%: %.cmx
-	$(OCAMLOPT) -o $@ $(OCAMLLIBS) cil.cmxa $^
-
-cil-mutate: cilMutate
-	mv $< $@
+cil-mutate: $(OBJECTS)
+	$(OCAMLOPT) -o $@ $(OCAMLLIBS) cil.cmxa $(OBJECTS)
 
 clean:
-	rm -f $(EXES) $(MODULES) *.cmi *.cmo *.o cil-mutate
+	rm -f cil-mutate $(OBJECTS) *.cmi *.cmo *.o
 
 install: cil-mutate
 	mkdir -p $(DESTDIR)/bin

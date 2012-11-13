@@ -1,5 +1,6 @@
 cil-mutate
 cilMutate
 *.cmi
+*.cmx
 *.cmo
 *.o
