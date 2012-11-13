@@ -171,14 +171,26 @@ let () = begin
     done
 
   end else if !delete then begin
+    if !stmt1 = 0 then begin
+      Printf.printf "Delete requires a statment.  Use -stmt1.\n";
+      exit 1
+    end;
     let del = new delVisitor cil target_stmts in
     visitCilFileSameGlobals del cil;
 
   end else if !insert then begin
+    if !stmt1 = 0 or !stmt2 = 0 then begin
+      Printf.printf "Insert requires statments.  Use -stmt1 and -stmt2.\n";
+      exit 1
+    end;
     let app = new appVisitor cil target_stmts in
     visitCilFileSameGlobals app cil;
 
   end else if !swap then begin
+    if !stmt1 = 0 or !stmt2 = 0 then begin
+      Printf.printf "Swap requires statments.  Use -stmt1 and -stmt2.\n";
+      exit 1
+    end;
     let swap = new swapVisitor cil target_stmts in
     Hashtbl.add target_stmts !stmt2 (Hashtbl.find main_ht !stmt1);
     visitCilFileSameGlobals swap cil;
