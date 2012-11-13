@@ -54,7 +54,7 @@ let get_next_count () =
   incr counter ;
   count 
 
-let massive_hash_table = Hashtbl.create 4096
+let main_ht = Hashtbl.create 4096
 
 (* This visitor walks over the C program AST and builds the hashtable that
  * maps integers to statements. *) 
@@ -66,7 +66,7 @@ class numVisitor = object
         if can_trace b.skind then begin
           let count = get_next_count () in 
           b.sid <- count ;
-          Hashtbl.add massive_hash_table count b.skind
+          Hashtbl.add main_ht count b.skind
         end else begin
           b.sid <- 0; 
         end ;
@@ -75,10 +75,10 @@ class numVisitor = object
     ) )
 end 
 
-class delVisitor (file : Cil.file) (to_del : int) = object
+class delVisitor (file : Cil.file) (to_del : stmt_map) = object
   inherit nopCilVisitor
   method vstmt s = ChangeDoChildrenPost(s, fun s ->
-    if to_del = s.sid then begin
+    if Hashtbl.mem to_del s.sid then begin
       let block = { battrs = []; bstmts = []; } in
       { s with skind = Block(block) }
     end else s)
@@ -105,14 +105,16 @@ let () = begin
   initCIL ();
   let cil = (Frontc.parse file ()) in
   visitCilFileSameGlobals (new numVisitor) cil;
-
+  let target_stmts = Hashtbl.create 255 in
+  Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt1);
+  
   (* 3. modify at the CIL level *)
   if !ids then begin
     Printf.printf "%d\n" (!counter - 1);
 
   end else if !list then begin
     for i=1 to (!counter - 1) do
-      let stmt = Hashtbl.find massive_hash_table i in
+      let stmt = Hashtbl.find main_ht i in
       let stmt_type = match stmt with
       | Instr _ -> "Instr"
       | Return _ -> "Return"
@@ -124,8 +126,7 @@ let () = begin
     done
 
   end else if !delete then begin
-    Printf.printf "/* deleting %d */\n" !stmt1;
-    let del = new delVisitor cil !stmt1 in
+    let del = new delVisitor cil target_stmts in
     visitCilFileSameGlobals del cil;
 
   end else if !insert then begin
