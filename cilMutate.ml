@@ -52,7 +52,18 @@ let () = begin
   (* 2. load the program into CIL *)
   Cil.initCIL ();
   let cil = (Frontc.parse file ()) in
-  write_cil cil;
   (* 3. modify at the CIL level *)
+  if !ids then begin
+    Printf.printf "ids\n"
+  end else if !number then begin
+    Printf.printf "number\n"
+  end else if !delete then begin
+    Printf.printf "delete\n"
+  end else if !insert then begin
+    Printf.printf "insert\n"
+  end else if !swap then begin
+    Printf.printf "swap\n"
+  end;
   (* 4. write the results to STDOUT *)
+  write_cil cil;
 end
