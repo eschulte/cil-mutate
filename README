@@ -1,0 +1,28 @@
+Manipulate C Intermediate Language ASTs with CIL
+
+This tool performs a number of operations on CIL ASTs parsed from C
+source files.
+
+      ids | prints the total number of statements
+   number | numbers each statement
+   delete | deletes that numbered statement
+   insert | copies the second numbered statement before the first
+     swap | swaps the two numbered statements
+
+Installation
+
+  cil-mutate relies on CIL [1].
+
+  [1] http://kerneis.github.com/cil/
+
+Examples
+
+    $ cat etc/hello.c
+    #include <stdio.h>
+    int main(int argc, char *argv[])
+    {
+      puts("hello");
+      return 0;
+    }
+
+    $ cil-mutate -ids etc/hello.c
