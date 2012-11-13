@@ -90,13 +90,21 @@ class appVisitor (file : Cil.file) (to_app : stmt_map) = object
   inherit nopCilVisitor
   method vstmt s = ChangeDoChildrenPost(s, fun s ->
       if Hashtbl.mem to_app s.sid then begin
-        let swap_with = Hashtbl.find to_app s.sid in 
-        let copy = copy swap_with in
         let block = {
-          battrs = [] ;
-          bstmts = [ s ; { s with skind = copy ; } ];
+          battrs = [];
+          bstmts = [s; { s with skind = (copy (Hashtbl.find to_app s.sid)); }];
         } in
         { s with skind = Block(block) } 
+      end else s) 
+end 
+
+class swapVisitor (file : Cil.file) (to_swap : stmt_map) = object
+  (* If (x,y) is in the to_swap mapping, we replace statement x 
+   * with statement y. Presumably (y,x) is also in the mapping. *) 
+  inherit nopCilVisitor
+  method vstmt s = ChangeDoChildrenPost(s, fun s ->
+      if Hashtbl.mem to_swap s.sid then begin
+        { s with skind = (copy (Hashtbl.find to_swap s.sid)) } 
       end else s) 
 end 
 
@@ -124,7 +132,7 @@ let () = begin
   let target_stmts = Hashtbl.create 255 in
   if !stmt1 <> 0 then begin
     if !stmt2 <> 0 then
-      Hashtbl.add target_stmts !stmt2 (Hashtbl.find main_ht !stmt2)
+      Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt2)
     else
       Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt1)
   end;
@@ -151,11 +159,14 @@ let () = begin
     visitCilFileSameGlobals del cil;
 
   end else if !insert then begin
-    let del = new appVisitor cil target_stmts in
-    visitCilFileSameGlobals del cil;
+    let app = new appVisitor cil target_stmts in
+    visitCilFileSameGlobals app cil;
 
   end else if !swap then begin
-    Printf.printf "swap\n"
+    let swap = new swapVisitor cil target_stmts in
+    Hashtbl.add target_stmts !stmt2 (Hashtbl.find main_ht !stmt1);
+    visitCilFileSameGlobals swap cil;
+
   end;
 
   (* 4. write the results to STDOUT *)
