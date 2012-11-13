@@ -108,7 +108,7 @@ let () = begin
 
   (* 3. modify at the CIL level *)
   if !ids then begin
-    Printf.printf "%d\n" !counter;
+    Printf.printf "%d\n" (!counter - 1);
 
   end else if !list then begin
     for i=1 to (!counter - 1) do
