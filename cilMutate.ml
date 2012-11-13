@@ -14,6 +14,7 @@ let   swap = ref false
 let   args = ref []
 
 let speclist = [
+  (   "-ids", Arg.Unit (fun () ->    ids := true), "");
   ("-number", Arg.Unit (fun () -> number := true), "");
   ("-delete", Arg.Unit (fun () -> delete := true), "");
   ("-insert", Arg.Unit (fun () -> insert := true), "");
@@ -29,5 +30,5 @@ let () = begin
   (* 2. load the program into CIL *)
   (* 3. modify at the CIL level *)
   (* 4. write the results to STDOUT *)
-  Printf.printf "boo balls\n"
+  Printf.printf "ids=%b number=%b\n" !ids !number
 end
