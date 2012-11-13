@@ -68,6 +68,8 @@ let () = begin
     Printf.printf "swap\n"
   end;
   (* 4. write the results to STDOUT *)
-  let printer = new defaultCilPrinterClass in
-  iterGlobals cil (dumpGlobal printer stdout)
+  if not (!ids or !number) then begin
+    let printer = new defaultCilPrinterClass in
+    iterGlobals cil (dumpGlobal printer stdout)
+  end;
 end
