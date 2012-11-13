@@ -108,6 +108,23 @@ class swapVisitor (file : Cil.file) (to_swap : stmt_map) = object
       end else s) 
 end 
 
+class noLineCilPrinterClass = object
+  inherit defaultCilPrinterClass as super 
+  method pGlobal () (g:global) : Pretty.doc = 
+    match g with 
+    | GVarDecl(vi,l) when
+        (not !printCilAsIs && Hashtbl.mem Cil.builtinFunctions vi.vname) -> 
+          (* This prevents the printing of all of those 'compiler built-in'
+           * commented-out function declarations that always appear at the
+           * top of a normal CIL printout file. *) 
+          Pretty.nil 
+    | _ -> super#pGlobal () g
+
+  method pLineDirective ?(forcefile=false) l = 
+    Pretty.nil
+end 
+
+
 
 (* main routine: handle cmdline options and args *)
 let () = begin
@@ -171,7 +188,7 @@ let () = begin
 
   (* 4. write the results to STDOUT *)
   if not (!ids or !list) then begin
-    let printer = new defaultCilPrinterClass in
+    let printer = new noLineCilPrinterClass in
     iterGlobals cil (dumpGlobal printer stdout)
   end;
 end
