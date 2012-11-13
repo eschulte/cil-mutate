@@ -26,19 +26,68 @@ let speclist = [
 ]
 
 
-(* visitors *)
-class delVisitor (to_del : int) = object
+(* CIL visitors and support *)
+type stmt_id = int (* integers map to 'statements' in C AST. *) 
+type stmt_map = (stmt_id, Cil.stmtkind) Hashtbl.t (* map stmt_id to statement. *)
+
+(* CIL statementkinds that we consider as possible-to-be-modified
+ * (i.e., nodes in the AST that we may mutate/crossover via GP later). *)
+let can_trace sk = match sk with
+  | Instr _
+  | Return _
+  | If _
+  | Loop _
+  -> true
+
+  | Goto _
+  | Break _
+  | Continue _
+  | Switch _
+  | Block _
+  | TryFinally _
+  | TryExcept _
+  -> false
+
+let counter = ref 1 
+let get_next_count () = 
+  let count = !counter in 
+  incr counter ;
+  count 
+
+let massive_hash_table = Hashtbl.create 4096
+
+(* This visitor walks over the C program AST and builds the hashtable that
+ * maps integers to statements. *) 
+class numVisitor = object
+  inherit nopCilVisitor
+  method vblock b = 
+    ChangeDoChildrenPost(b,(fun b ->
+      List.iter (fun b -> 
+        if can_trace b.skind then begin
+          let count = get_next_count () in 
+          b.sid <- count ;
+          Hashtbl.add massive_hash_table count b.skind
+        end else begin
+          b.sid <- 0; 
+        end ;
+      ) b.bstmts ; 
+      b
+    ) )
+end 
+
+class delVisitor (file : Cil.file) (to_del : int) = object
   inherit nopCilVisitor
   method vstmt s = ChangeDoChildrenPost(s, fun s ->
     if to_del = s.sid then begin
       let block = { battrs = []; bstmts = []; } in
-      { s with skind = Block(block); }
+      { s with skind = Block(block) }
     end else s)
 end
 
 
 (* main routine: handle cmdline options and args *)
 let () = begin
+
   (* 1. read and parse arguments *)
   let collect arg = args := !args @ [arg] in
   let _ = Arg.parse speclist collect usage in
@@ -51,22 +100,31 @@ let () = begin
     Printf.printf "File '%s' does not exist\n" file;
     exit 1
   end;
-  (* 2. load the program into CIL *)
+
+  (* 2. load the program into CIL and collect stmts *)
   initCIL ();
   let cil = (Frontc.parse file ()) in
+  visitCilFileSameGlobals (new numVisitor) cil;
+
   (* 3. modify at the CIL level *)
   if !ids then begin
-    Printf.printf "ids\n"
+    Printf.printf "%d\n" !counter;
+
   end else if !number then begin
     Printf.printf "number\n"
+
   end else if !delete then begin
-    let del = new delVisitor in
-    visitCilFileSameGlobals (del !stmt1) cil;
+    Printf.printf "/* deleting %d */\n" !stmt1;
+    let del = new delVisitor cil !stmt1 in
+    visitCilFileSameGlobals del cil;
+
   end else if !insert then begin
     Printf.printf "insert\n"
+
   end else if !swap then begin
     Printf.printf "swap\n"
   end;
+
   (* 4. write the results to STDOUT *)
   if not (!ids or !number) then begin
     let printer = new defaultCilPrinterClass in
