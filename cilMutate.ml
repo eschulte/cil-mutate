@@ -27,7 +27,7 @@ let speclist = [
 
 
 (** CIL visitors and support *)
-type stmt_id = int (* integers map to 'statements' in C AST. *) 
+type stmt_id = int (* integers map to 'statements' in C AST. *)
 type stmt_map = (stmt_id, Cil.stmtkind) Hashtbl.t (* map stmt_id to statement. *)
 
 (* CIL statementkinds that we consider as possible-to-be-modified
@@ -51,26 +51,26 @@ let can_trace sk = match sk with
 let counter = ref (-1)
 let main_ht = Hashtbl.create 4096
 
-(* This makes a deep copy of an arbitrary Ocaml data structure *) 
-let copy (x : 'a) = 
+(* This makes a deep copy of an arbitrary Ocaml data structure *)
+let copy (x : 'a) =
   let str = Marshal.to_string x [] in
-  (Marshal.from_string str 0 : 'a) 
+  (Marshal.from_string str 0 : 'a)
 
 (* This visitor walks over the C program AST and builds the hashtable that
- * maps integers to statements. *) 
+ * maps integers to statements. *)
 class numVisitor = object
   inherit nopCilVisitor
-  method! vblock b = 
+  method! vblock b =
     ChangeDoChildrenPost(b,(fun b ->
-      List.iter (fun b -> 
+      List.iter (fun b ->
         if can_trace b.skind then begin
           incr counter;
           b.sid <- !counter ;
           Hashtbl.add main_ht !counter b.skind
         end else begin
-          b.sid <- 0; 
+          b.sid <- 0;
         end ;
-      ) b.bstmts ; 
+      ) b.bstmts ;
       b
     ) )
 end 
@@ -86,7 +86,7 @@ end
 
 class appVisitor (file : Cil.file) (to_app : stmt_map) = object
   (* If (x,y) is in the to_append mapping, we replace x with
-   * the block { x; y; } -- that is, we append y after x. *) 
+   * the block { x; y; } -- that is, we append y after x. *)
   inherit nopCilVisitor
   method! vstmt s = ChangeDoChildrenPost(s, fun s ->
       if Hashtbl.mem to_app s.sid then begin
@@ -94,35 +94,35 @@ class appVisitor (file : Cil.file) (to_app : stmt_map) = object
           battrs = [];
           bstmts = [s; { s with skind = (copy (Hashtbl.find to_app s.sid)); }];
         } in
-        { s with skind = Block(block) } 
-      end else s) 
-end 
+        { s with skind = Block(block) }
+      end else s)
+end
 
 class swapVisitor (file : Cil.file) (to_swap : stmt_map) = object
-  (* If (x,y) is in the to_swap mapping, we replace statement x 
-   * with statement y. Presumably (y,x) is also in the mapping. *) 
+  (* If (x,y) is in the to_swap mapping, we replace statement x
+   * with statement y. Presumably (y,x) is also in the mapping. *)
   inherit nopCilVisitor
   method! vstmt s = ChangeDoChildrenPost(s, fun s ->
       if Hashtbl.mem to_swap s.sid then begin
-        { s with skind = (copy (Hashtbl.find to_swap s.sid)) } 
-      end else s) 
-end 
+        { s with skind = (copy (Hashtbl.find to_swap s.sid)) }
+      end else s)
+end
 
 class noLineCilPrinterClass = object
-  inherit defaultCilPrinterClass as super 
-  method! pGlobal () (g:global) : Pretty.doc = 
-    match g with 
+  inherit defaultCilPrinterClass as super
+  method! pGlobal () (g:global) : Pretty.doc =
+    match g with
     | GVarDecl(vi,l) when
-        (not !printCilAsIs && Hashtbl.mem Cil.builtinFunctions vi.vname) -> 
+        (not !printCilAsIs && Hashtbl.mem Cil.builtinFunctions vi.vname) ->
           (* This prevents the printing of all of those 'compiler built-in'
            * commented-out function declarations that always appear at the
-           * top of a normal CIL printout file. *) 
-          Pretty.nil 
+           * top of a normal CIL printout file. *)
+          Pretty.nil
     | _ -> super#pGlobal () g
 
-  method! pLineDirective ?(forcefile=false) l = 
+  method! pLineDirective ?(forcefile=false) l =
     Pretty.nil
-end 
+end
 
 
 (** main routine: handle cmdline options and args *)
