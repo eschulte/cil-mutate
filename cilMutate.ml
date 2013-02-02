@@ -8,22 +8,25 @@ let usage = Printf.sprintf
 
 let    ids = ref false
 let   list = ref false
+let  trace = ref false
 let delete = ref false
 let insert = ref false
 let   swap = ref false
 let  stmt1 = ref (-1)
 let  stmt2 = ref (-1)
 let   args = ref []
+let trace_file = ref "trace"
 
 let speclist = [
-  (   "-ids", Arg.Unit (fun () -> ids := true), "   print the # of statements");
-  (  "-list", Arg.Unit (fun () -> list := true), "  list statements with IDs");
-  ("-delete", Arg.Unit (fun () -> delete := true), "delete stmt1");
-  ("-insert", Arg.Unit (fun () -> insert := true), "insert stmt1 before stmt2");
-  (  "-swap", Arg.Unit (fun () -> swap := true), "  swap two stmt1 with stmt2");
-  ( "-stmt1", Arg.Int  (fun arg -> stmt1 := arg),  " first statement");
-  ( "-stmt2", Arg.Int  (fun arg -> stmt2 := arg),  " second statement")
-]
+  (       "-ids", Arg.Unit   (fun () -> ids := true), "       print the # of statements");
+  (      "-list", Arg.Unit   (fun () -> list := true), "      list statements with IDs");
+  (    "-delete", Arg.Unit   (fun () -> delete := true), "    delete stmt1");
+  (     "-trace", Arg.Unit   (fun () -> trace := true), "     instrument to trace execution");
+  (    "-insert", Arg.Unit   (fun () -> insert := true), "    insert stmt1 before stmt2");
+  (      "-swap", Arg.Unit   (fun () -> swap := true), "      swap two stmt1 with stmt2");
+  ("-trace-file", Arg.String (fun arg -> trace_file := arg), "file to save trace");
+  (     "-stmt1", Arg.Int    (fun arg -> stmt1 := arg), "     first statement");
+  (     "-stmt2", Arg.Int    (fun arg -> stmt2 := arg), "     second statement") ]
 
 
 (** CIL visitors and support *)
@@ -73,7 +76,29 @@ class numVisitor = object
       ) b.bstmts ;
       b
     ) )
-end 
+end
+
+(* from covVisitor in genprog *)
+class traceVisitor = object
+  inherit nopCilVisitor
+
+  method! vblock b =
+    ChangeDoChildrenPost(b,(fun b ->
+      let result = List.map (fun stmt ->
+        if stmt.sid > 0 then begin
+          let str = Printf.sprintf "%d\n" stmt.sid in 
+          let stderr_va = makeVarinfo true "_coverage_fout" (TPtr(TVoid [], [])) in
+          let stderr = Lval((Var stderr_va), NoOffset) in
+          let lval va = Lval((Var va), NoOffset) in
+          let fprintf = lval (makeVarinfo true "fprintf" (TVoid [])) in
+          let fflush = lval (makeVarinfo true "fflush" (TVoid [])) in
+          [(mkStmt
+              (Instr([(Call(None, fprintf, [stderr; Const(CStr(str))], !currentLoc));
+                      (Call(None, fflush, [stderr], !currentLoc))]))); stmt]
+        end else [stmt]
+      ) b.bstmts in
+      let block = { b with bstmts = List.flatten result } in block ) )
+end
 
 class delVisitor (file : Cil.file) (to_del : stmt_map) = object
   inherit nopCilVisitor
@@ -169,6 +194,10 @@ let () = begin
       in
       Printf.printf "%d %s\n" i stmt_type;
     done
+
+  end else if !trace then begin
+    let trace = new traceVisitor in
+    visitCilFileSameGlobals trace cil;
 
   end else if !delete then begin
     if !stmt1 < 0 then begin
