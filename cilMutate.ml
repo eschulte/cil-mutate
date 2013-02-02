@@ -79,25 +79,41 @@ class numVisitor = object
 end
 
 (* from covVisitor in genprog *)
+let stderr_va = makeVarinfo true "_coverage_fout" (TPtr(TVoid [], []))
 class traceVisitor = object
   inherit nopCilVisitor
+
+  val fopen = Lval((Var (makeVarinfo true "fopen" (TVoid []))), NoOffset)
 
   method! vblock b =
     ChangeDoChildrenPost(b,(fun b ->
       let result = List.map (fun stmt ->
         if stmt.sid > 0 then begin
           let str = Printf.sprintf "%d\n" stmt.sid in 
-          let stderr_va = makeVarinfo true "_coverage_fout" (TPtr(TVoid [], [])) in
+          
           let stderr = Lval((Var stderr_va), NoOffset) in
-          let lval va = Lval((Var va), NoOffset) in
-          let fprintf = lval (makeVarinfo true "fprintf" (TVoid [])) in
-          let fflush = lval (makeVarinfo true "fflush" (TVoid [])) in
+          
+          let fprintf = Lval(Var (makeVarinfo true "fprintf" (TVoid [])), NoOffset) in
+          let fflush = Lval(Var (makeVarinfo true "fflush" (TVoid [])), NoOffset) in
           [(mkStmt
               (Instr([(Call(None, fprintf, [stderr; Const(CStr(str))], !currentLoc));
                       (Call(None, fflush, [stderr], !currentLoc))]))); stmt]
         end else [stmt]
       ) b.bstmts in
       let block = { b with bstmts = List.flatten result } in block ) )
+
+  method! vfunc f =
+    let outfile = Var(stderr_va), NoOffset in
+    let fout_args = [Const(CStr(!trace_file)); Const(CStr("wb"))] in
+    let make_fout = Call((Some(outfile)), fopen, fout_args, !currentLoc) in
+    let new_stmt = mkStmt (Instr([make_fout])) in
+    let ifknd = If(BinOp(Eq,Lval(outfile), Cil.zero, Cil.intType),
+                   { battrs = []; bstmts = [new_stmt] }, 
+                   { battrs = []; bstmts = [] }, !currentLoc) in
+    let ifstmt = Cil.mkStmt(ifknd) in
+    ChangeDoChildrenPost(f, (fun f ->
+      f.sbody.bstmts <- ifstmt :: f.sbody.bstmts; f))
+
 end
 
 class delVisitor (file : Cil.file) (to_del : stmt_map) = object
@@ -198,6 +214,7 @@ let () = begin
   end else if !trace then begin
     let trace = new traceVisitor in
     visitCilFileSameGlobals trace cil;
+    cil.globals <- [GVarDecl(stderr_va,!currentLoc)] @ cil.globals;
 
   end else if !delete then begin
     if !stmt1 < 0 then begin
