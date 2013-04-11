@@ -5,7 +5,7 @@ source files.
 
       ids | prints the total number of statements
      list | list each statement with its ID
-   delete | deletes that numbered statement
+      cut | cut that numbered statement
    insert | copies the second numbered statement before the first
      swap | swaps the two numbered statements
 
@@ -45,7 +45,7 @@ Examples
     0 Instr
     1 Return
 
-    $ cil-mutate -delete -stmt1 0 etc/hello.c
+    $ cil-mutate -cut -stmt1 0 etc/hello.c
     extern int ( /* missing proto */  puts)() ;
     int main(int argc , char **argv )
     {

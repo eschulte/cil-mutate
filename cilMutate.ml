@@ -9,7 +9,7 @@ let usage = Printf.sprintf
 let    ids = ref false
 let   list = ref false
 let  trace = ref false
-let delete = ref false
+let    cut = ref false
 let insert = ref false
 let   swap = ref false
 let  stmt1 = ref (-1)
@@ -20,7 +20,7 @@ let trace_file = ref "trace"
 let speclist = [
   (       "-ids", Arg.Unit   (fun () -> ids := true), "       print the # of statements");
   (      "-list", Arg.Unit   (fun () -> list := true), "      list statements with IDs");
-  (    "-delete", Arg.Unit   (fun () -> delete := true), "    delete stmt1");
+  (       "-cut", Arg.Unit   (fun () -> cut := true), "       cut stmt1");
   (     "-trace", Arg.Unit   (fun () -> trace := true), "     instrument to trace execution");
   (    "-insert", Arg.Unit   (fun () -> insert := true), "    insert stmt1 before stmt2");
   (      "-swap", Arg.Unit   (fun () -> swap := true), "      swap two stmt1 with stmt2");
@@ -216,7 +216,7 @@ let () = begin
     visitCilFileSameGlobals trace cil;
     cil.globals <- [GVarDecl(stderr_va,!currentLoc)] @ cil.globals;
 
-  end else if !delete then begin
+  end else if !cut then begin
     if !stmt1 < 0 then begin
       Printf.printf "Delete requires a statment.  Use -stmt1.\n";
       exit 1
