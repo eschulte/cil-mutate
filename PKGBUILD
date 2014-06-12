@@ -1,5 +1,26 @@
 # -*- shell-script -*-
 # Maintainer: Eric Schulte <schulte.eric@gmail.com>
+#
+# Use the following to install cil on
+# Arch. https://aur.archlinux.org/packages/cil-git/
+#
+# Also, note that you might have to do something like the following to
+# re-install ocamlfind with the "'staticlibs'" in the "options" array.
+# 
+# mkdir /tmp/ocaml-findlib/
+# pushd /tmp/ocaml-findlib/
+# URL="https://projects.archlinux.org/svntogit/community.git/plain/trunk/PKGBUILD?h=packages/ocaml-findlib"
+# curl "$URL"|sed "s/'zipman'/'zipman' 'staticlibs'/" >PKGBUILD
+# makepkg
+# pacman -R ocaml-findlib
+# pacman -U ocaml-findlib-*
+# popd
+# 
+# 2. manually add "'staticlibs'" to the "options" array in the
+#    ocaml-findlib PKGBUILD file
+#    
+# 
+# 3. build and install the resulting updated ocaml-findlib package 
 pkgname=cil-mutate-git
 pkgver=283110a
 pkgrel=1
