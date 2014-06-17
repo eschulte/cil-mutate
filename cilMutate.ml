@@ -6,20 +6,22 @@ let usage = Printf.sprintf
     "Usage: %s [options] file"
     (Filename.basename Sys.argv.(0))
 
-let    ids = ref false
-let   list = ref false
-let  trace = ref false
-let    cut = ref false
-let insert = ref false
-let   swap = ref false
-let  stmt1 = ref (-1)
-let  stmt2 = ref (-1)
-let   args = ref []
+let        ids = ref false
+let       list = ref false
+let   fulllist = ref false
+let      trace = ref false
+let        cut = ref false
+let     insert = ref false
+let       swap = ref false
+let      stmt1 = ref (-1)
+let      stmt2 = ref (-1)
+let       args = ref []
 let trace_file = ref "trace"
 
 let speclist = [
   (       "-ids", Arg.Unit   (fun () -> ids := true), "       print the # of statements");
   (      "-list", Arg.Unit   (fun () -> list := true), "      list statements with IDs");
+  (  "-fulllist", Arg.Unit   (fun () -> fulllist := true), "  list full statements with IDs");
   (       "-cut", Arg.Unit   (fun () -> cut := true), "       cut stmt1");
   (     "-trace", Arg.Unit   (fun () -> trace := true), "     instrument to trace execution");
   (    "-insert", Arg.Unit   (fun () -> insert := true), "    insert stmt1 before stmt2");
@@ -69,7 +71,7 @@ class numVisitor = object
         if can_trace b.skind then begin
           incr counter;
           b.sid <- !counter ;
-          Hashtbl.add main_ht !counter b.skind
+          Hashtbl.add main_ht !counter b
         end else begin
           b.sid <- 0;
         end ;
@@ -189,9 +191,9 @@ let () = begin
   let target_stmts = Hashtbl.create 255 in
   if !stmt1 >= 0 then begin
     if !stmt2 >= 0 then
-      Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt2)
+      Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt2).skind
     else
-      Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt1)
+      Hashtbl.add target_stmts !stmt1 (Hashtbl.find main_ht !stmt1).skind
   end;
 
   (* 3. modify at the CIL level *)
@@ -201,7 +203,7 @@ let () = begin
   end else if !list then begin
     for i=0 to !counter do
       let stmt = Hashtbl.find main_ht i in
-      let stmt_type = match stmt with
+      let stmt_type = match stmt.skind with
       | Instr _ -> "Instr"
       | Return _ -> "Return"
       | If _ -> "If"
@@ -209,6 +211,13 @@ let () = begin
       | _ -> "Error: Other"
       in
       Printf.printf "%d %s\n" i stmt_type;
+    done
+
+  end else if !fulllist then begin
+    let print_stmt s = Cil.d_stmt () s in
+    for i=0 to !counter do
+      let stmt = Hashtbl.find main_ht i in
+      Printf.printf "%d\n%s\n\n" i (Pretty.sprint max_int (print_stmt stmt));
     done
 
   end else if !trace then begin
@@ -238,13 +247,13 @@ let () = begin
       exit 1
     end;
     let swap = new swapVisitor cil target_stmts in
-    Hashtbl.add target_stmts !stmt2 (Hashtbl.find main_ht !stmt1);
+    Hashtbl.add target_stmts !stmt2 (Hashtbl.find main_ht !stmt1).skind;
     visitCilFileSameGlobals swap cil;
 
   end;
 
   (* 4. write the results to STDOUT *)
-  if not (!ids or !list) then begin
+  if not (!ids or !list or !fulllist) then begin
     let printer = new noLineCilPrinterClass in
     iterGlobals cil (dumpGlobal printer stdout)
   end;
