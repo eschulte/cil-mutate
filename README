@@ -5,7 +5,10 @@ source files.
 
       ids | prints the total number of statements
      list | list each statement with its ID
-      cut | cut that numbered statement
+ fulllist | show each statements with its ID
+     show | show the numbered statement
+      cut | cut the numbered statement
+    trace | instrument to trace execution
    insert | copies the second numbered statement before the first
      swap | swaps the two numbered statements
 
