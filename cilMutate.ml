@@ -10,6 +10,7 @@ let        ids = ref false
 let       list = ref false
 let   fulllist = ref false
 let      trace = ref false
+let       show = ref false
 let        cut = ref false
 let     insert = ref false
 let       swap = ref false
@@ -22,6 +23,7 @@ let speclist = [
   (       "-ids", Arg.Unit   (fun () -> ids := true), "       print the # of statements");
   (      "-list", Arg.Unit   (fun () -> list := true), "      list statements with IDs");
   (  "-fulllist", Arg.Unit   (fun () -> fulllist := true), "  list full statements with IDs");
+  (      "-show", Arg.Unit   (fun () -> show := true), "      print stmt1");
   (       "-cut", Arg.Unit   (fun () -> cut := true), "       cut stmt1");
   (     "-trace", Arg.Unit   (fun () -> trace := true), "     instrument to trace execution");
   (    "-insert", Arg.Unit   (fun () -> insert := true), "    insert stmt1 before stmt2");
@@ -214,16 +216,23 @@ let () = begin
     done
 
   end else if !fulllist then begin
-    let print_stmt s = Cil.d_stmt () s in
     for i=0 to !counter do
       let stmt = Hashtbl.find main_ht i in
-      Printf.printf "%d\n%s\n\n" i (Pretty.sprint max_int (print_stmt stmt));
+      Printf.printf "%d\n%s\n\n" i (Pretty.sprint max_int (Cil.d_stmt () stmt));
     done
 
   end else if !trace then begin
     let trace = new traceVisitor in
     visitCilFileSameGlobals trace cil;
     cil.globals <- [GVarDecl(stderr_va,!currentLoc)] @ cil.globals;
+
+  end else if !show then begin
+    if !stmt1 < 0 then begin
+      Printf.printf "Show requires a statment.  Use -stmt1.\n";
+      exit 1
+    end;
+    let stmt = Hashtbl.find main_ht !stmt1 in
+    Printf.printf "%s\n\n" (Pretty.sprint max_int (Cil.d_stmt () stmt));
 
   end else if !cut then begin
     if !stmt1 < 0 then begin
@@ -253,7 +262,7 @@ let () = begin
   end;
 
   (* 4. write the results to STDOUT *)
-  if not (!ids or !list or !fulllist) then begin
+  if not (!ids or !list or !fulllist or !show) then begin
     let printer = new noLineCilPrinterClass in
     iterGlobals cil (dumpGlobal printer stdout)
   end;
