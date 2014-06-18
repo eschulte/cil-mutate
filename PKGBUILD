@@ -22,7 +22,7 @@
 # 
 # 3. build and install the resulting updated ocaml-findlib package 
 pkgname=cil-mutate-git
-pkgver=283110a
+pkgver=v.1.0.r5.g6049e43
 pkgrel=1
 pkgdesc="Manipulate C Intermediate Language ASTs with CIL"
 arch=('i686' 'x86_64')
@@ -35,7 +35,7 @@ md5sums=('SKIP')
 
 pkgver() {
   cd "$srcdir/$pkgname"
-  git describe --always|sed 's/-/./g;s/ //g'
+  git describe --long --tags |sed -r 's/([^-]*-g)/r\1/;s/-/./g'
 }
 
 build() {
