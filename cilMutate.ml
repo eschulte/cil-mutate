@@ -55,7 +55,7 @@ let can_trace sk = match sk with
   | TryExcept _
   -> false
 
-let counter = ref (-1)
+let counter = ref (0)
 let main_ht = Hashtbl.create 4096
 
 (* This makes a deep copy of an arbitrary Ocaml data structure *)
