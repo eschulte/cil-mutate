@@ -203,7 +203,7 @@ let () = begin
     Printf.printf "%d\n" (1 + !counter);
 
   end else if !list then begin
-    for i=0 to !counter do
+    for i=1 to !counter do
       let stmt = Hashtbl.find main_ht i in
       let stmt_type = match stmt.skind with
       | Instr _ -> "Instr"
@@ -216,7 +216,7 @@ let () = begin
     done
 
   end else if !fulllist then begin
-    for i=0 to !counter do
+    for i=1 to !counter do
       let stmt = Hashtbl.find main_ht i in
       Printf.printf "%d\n%s\n\n" i (Pretty.sprint max_int (Cil.d_stmt () stmt));
     done
