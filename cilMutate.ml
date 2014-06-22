@@ -92,7 +92,7 @@ class traceVisitor = object
   method! vblock b =
     ChangeDoChildrenPost(b,(fun b ->
       let result = List.map (fun stmt ->
-        if stmt.sid >= 0 then begin
+        if stmt.sid > 0 then begin
           let str = Printf.sprintf "%d\n" stmt.sid in 
           
           let stderr = Lval((Var stderr_va), NoOffset) in
