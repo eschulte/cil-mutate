@@ -243,7 +243,7 @@ let () = begin
     visitCilFileSameGlobals del cil;
 
   end else if !insert then begin
-    if !stmt1 < 0 or !stmt2 < 0 then begin
+    if !stmt1 < 0 || !stmt2 < 0 then begin
       Printf.printf "Insert requires statments.  Use -stmt1 and -stmt2.\n";
       exit 1
     end;
@@ -251,7 +251,7 @@ let () = begin
     visitCilFileSameGlobals app cil;
 
   end else if !swap then begin
-    if !stmt1 < 0 or !stmt2 < 0 then begin
+    if !stmt1 < 0 || !stmt2 < 0 then begin
       Printf.printf "Swap requires statments.  Use -stmt1 and -stmt2.\n";
       exit 1
     end;
@@ -262,7 +262,7 @@ let () = begin
   end;
 
   (* 4. write the results to STDOUT *)
-  if not (!ids or !list or !fulllist or !show) then begin
+  if not (!ids || !list || !fulllist || !show) then begin
     let printer = new noLineCilPrinterClass in
     iterGlobals cil (dumpGlobal printer stdout)
   end;
