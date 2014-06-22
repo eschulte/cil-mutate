@@ -45,10 +45,10 @@ Examples
     2
 
     $ cil-mutate -list etc/hello.c
-    0 Instr
-    1 Return
+    1 Instr
+    2 Return
 
-    $ cil-mutate -cut -stmt1 0 etc/hello.c
+    $ cil-mutate -cut -stmt1 1 etc/hello.c
     extern int ( /* missing proto */  puts)() ;
     int main(int argc , char **argv )
     {
@@ -62,10 +62,10 @@ Examples
     }
     }
 
-    $ cil-mutate -swap -stmt1 0 -stmt2 1 etc/hello.c
+    $ cil-mutate -swap -stmt1 1 -stmt2 2 etc/hello.c
     extern int ( /* missing proto */  puts)() ;
-    int main(int argc , char **argv ) 
-    { 
+    int main(int argc , char **argv )
+    {
 
 
       {
@@ -73,6 +73,30 @@ Examples
       puts("hello");
     }
     }
+
+    $ cil-mutate -trace etc/hello.c
+    void *_coverage_fout ;
+    extern int ( /* missing proto */  puts)() ;
+    int main(int argc , char **argv )
+    {
+
+
+      {
+      if (_coverage_fout == 0) {
+        _coverage_fout = fopen("trace", "wb");
+      }
+      fprintf(_coverage_fout, "1\n");
+      fflush(_coverage_fout);
+      puts("hello");
+      fprintf(_coverage_fout, "2\n");
+      fflush(_coverage_fout);
+      return (0);
+    }
+    }
+
+    $ cil-mutate -show -stmt1 1 etc/hello.c
+    #line 4 "hello.c"
+    puts("hello");
 
 License
 
