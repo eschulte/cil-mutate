@@ -63,6 +63,36 @@ let copy (x : 'a) =
   let str = Marshal.to_string x [] in
   (Marshal.from_string str 0 : 'a)
 
+(* This visitor changes empty statement lists (e.g., the else branch in if
+    (foo) \{ bar(); \} ) into dummy statements that we can modify later. *)
+class emptyVisitor = object
+  inherit nopCilVisitor
+  method vblock b =
+    ChangeDoChildrenPost(b,(fun b ->
+      if b.bstmts = [] then
+        mkBlock [ mkEmptyStmt () ]
+      else b
+    ))
+end
+
+(* This visitor makes every instruction into its own statement. *)
+class everyVisitor = object
+  inherit nopCilVisitor
+  method vblock b =
+    ChangeDoChildrenPost(b,(fun b ->
+      let stmts = List.map (fun stmt ->
+        match stmt.skind with
+        | Instr([]) -> [stmt]
+        | Instr(first :: rest) ->
+          ({stmt with skind = Instr([first])}) ::
+            List.map (fun instr -> mkStmtOneInstr instr ) rest
+        | other -> [ stmt ]
+      ) b.bstmts in
+      let stmts = List.flatten stmts in
+        { b with bstmts = stmts }
+    ))
+end
+
 (* This visitor walks over the C program AST and builds the hashtable that
  * maps integers to statements. *)
 class numVisitor = object
@@ -93,10 +123,10 @@ class traceVisitor = object
     ChangeDoChildrenPost(b,(fun b ->
       let result = List.map (fun stmt ->
         if stmt.sid > 0 then begin
-          let str = Printf.sprintf "%d\n" stmt.sid in 
-          
+          let str = Printf.sprintf "%d\n" stmt.sid in
+
           let stderr = Lval((Var stderr_va), NoOffset) in
-          
+
           let fprintf = Lval(Var (makeVarinfo true "fprintf" (TVoid [])), NoOffset) in
           let fflush = Lval(Var (makeVarinfo true "fflush" (TVoid [])), NoOffset) in
           [(mkStmt
@@ -112,7 +142,7 @@ class traceVisitor = object
     let make_fout = Call((Some(outfile)), fopen, fout_args, !currentLoc) in
     let new_stmt = mkStmt (Instr([make_fout])) in
     let ifknd = If(BinOp(Eq,Lval(outfile), Cil.zero, Cil.intType),
-                   { battrs = []; bstmts = [new_stmt] }, 
+                   { battrs = []; bstmts = [new_stmt] },
                    { battrs = []; bstmts = [] }, !currentLoc) in
     let ifstmt = Cil.mkStmt(ifknd) in
     ChangeDoChildrenPost(f, (fun f ->
@@ -189,6 +219,8 @@ let () = begin
   (* 2. load the program into CIL and collect stmts *)
   initCIL ();
   let cil = (Frontc.parse file ()) in
+  visitCilFileSameGlobals (new everyVisitor) cil ;
+  visitCilFileSameGlobals (new emptyVisitor) cil ;
   visitCilFileSameGlobals (new numVisitor) cil;
   let target_stmts = Hashtbl.create 255 in
   if !stmt1 >= 0 then begin
